@@ -18,9 +18,6 @@ export interface IWebResult {
 
 export default async function send_msg(service: string, msg: unknown, actionid: string) {
 	const data = await invoke<IWebResult>(config.cwd, service, msg, actionid);
-	if (!data) {
-		return null;
-	}
 	if (Buffer.isBuffer(data.data)) {
 		logger.debug(`res=Blob Data.actionid=${actionid}`);
 		if (!data.content_type) {

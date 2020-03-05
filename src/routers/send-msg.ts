@@ -32,12 +32,7 @@ export default function proxy_msg(router: Router) {
 				...msg
 			};
 			const ret = await send_msg(params.service, data, actionid);
-			if (ret) {
-				set_response(res, ret, m, actionid, tm);
-			} else {
-				logger.error(`Service:${params.service} is not exist. actionid=${actionid}, msg=${msg}`);
-				res.sendStatus(500);
-			}
+			set_response(res, ret, m, actionid, tm);
 		} catch (e) {
 			const err_msg = (e as Error).message || e.toString();
 			logger.error(`Failling proxy message. ${err_msg}, and ${new Date().getTime() - tm}ms cost. actionid=${actionid}.`);

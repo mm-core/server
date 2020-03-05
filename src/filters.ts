@@ -11,7 +11,7 @@ export default function project() {
 	// all_custom_filters
 	const routers = config.filters || [];
 	routers.forEach((r) => {
-		logger.info(`start listening: ${r.url}`);
+		logger.info(`start listening filter: ${r.url}`);
 		router[r.method](r.url, async (req, res, next) => {
 			const headers = req.headers;
 			const actionid = headers.actionid as string;
@@ -40,18 +40,13 @@ export default function project() {
 				const msg = JSON.stringify(data);
 				logger.info(`Request:${msg},actionid=${actionid}`);
 				const ret = await send_msg(r.service, data, actionid);
-				if (ret) {
-					set_response(res, ret, msg, actionid, tm);
-					if (!ret.data) {
-						next();
-					}
-				} else {
-					logger.error(`Service:${r.service} is not exist. actionid=${actionid}, msg=${msg}`);
-					res.sendStatus(500);
+				set_response(res, ret, msg, actionid, tm);
+				if (!ret.data) {
+					next();
 				}
 			} catch (e) {
 				const err_msg = (e as Error).message || e.toString();
-				logger.error(`Failling proxy message. ${err_msg}, and ${new Date().getTime() - tm}ms cost. actionid=${actionid}.`);
+				logger.error(`Failling filter message. ${err_msg}, and ${new Date().getTime() - tm}ms cost. actionid=${actionid}.`);
 				res.status(500).end(err_msg);
 			}
 		});
