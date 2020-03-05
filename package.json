@@ -1,6 +1,6 @@
 {
 	"name": "@mmstudio/server",
-	"version": "1.0.202003051137",
+	"version": "1.0.202003051325",
 	"description": "web server",
 	"scripts": {
 		"test": "tsc && ava ./tests/*.js",
