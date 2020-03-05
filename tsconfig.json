@@ -22,7 +22,7 @@
 		"alwaysStrict": true,
 		"baseUrl": "",
 		"charset": "utf8",
-		"declaration": true,
+		"declaration": false,
 		"inlineSourceMap": false,
 		"esModuleInterop": true,
 		"allowSyntheticDefaultImports": true,
