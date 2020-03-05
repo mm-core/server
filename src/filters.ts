@@ -46,7 +46,8 @@ export default function project() {
 						next();
 					}
 				} else {
-					next();
+					logger.error(`Service:${r.service} is not exist. actionid=${actionid}, msg=${msg}`);
+					res.sendStatus(500);
 				}
 			} catch (e) {
 				const err_msg = (e as Error).message || e.toString();

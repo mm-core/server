@@ -35,7 +35,7 @@ export default function proxy_msg(router: Router) {
 			if (ret) {
 				set_response(res, ret, m, actionid, tm);
 			} else {
-				logger.error(`Service:${params.service} should return something. actionid=${actionid}, msg=${m}`);
+				logger.error(`Service:${params.service} is not exist. actionid=${actionid}, msg=${msg}`);
 				res.sendStatus(500);
 			}
 		} catch (e) {

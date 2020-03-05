@@ -42,7 +42,7 @@ export default function project(router: Router) {
 				if (ret) {
 					set_response(res, ret, msg, actionid, tm);
 				} else {
-					logger.error(`Service:${r.service} should return something. actionid=${actionid}, msg=${msg}`);
+					logger.error(`Service:${r.service} is not exist. actionid=${actionid}, msg=${msg}`);
 					res.sendStatus(500);
 				}
 			} catch (e) {

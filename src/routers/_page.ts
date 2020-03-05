@@ -26,11 +26,16 @@ export default async function page(page_name: string, url: string, msg: ICommonP
 	const headers = { actionid };
 	logger.debug(`Try get file in dist. page:${page_name}, actionid=${actionid}`);
 	const fullpath = path.join(config.cwd, 'dist', page_name, 'n');
-	delete require.cache[fullpath];
-	try {
-		await access(`${fullpath}.js`);
-	} catch (error) {
-		return null;
+	if (require.cache[fullpath]) {
+		if (config.debug) {
+			delete require.cache[fullpath];
+		}
+	} else {
+		try {
+			await access(`${fullpath}.js`);
+		} catch (error) {
+			return null;
+		}
 	}
 	// eslint-disable-next-line import/no-dynamic-require
 	return (require(fullpath) as IService).default(url, msg, headers);
