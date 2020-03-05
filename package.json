@@ -1,13 +1,17 @@
 {
-	"name": "@mmstudio/base",
+	"name": "@mmstudio/server",
 	"version": "1.0.0",
-	"description": "$desc",
+	"description": "web server",
 	"scripts": {
 		"test": "tsc && ava ./tests/*.js",
-		"watch": "tsc -w & ava --watch ./tests/*.js",
-		"lint": "eslint ./src/*.ts",
+		"watch": "tsc -w",
+		"lint": "eslint ./src/*.ts ./src/**/*.ts",
 		"compile": "tsc",
-		"build": "npm run lint && npm run compile"
+		"build": "npm run lint && npm run compile",
+		"start": "node ./dist/index.js"
+	},
+	"bin": {
+		"mm-server": "./dist/index.js"
 	},
 	"repository": {
 		"type": "git",
@@ -25,8 +29,8 @@
 		"框架"
 	],
 	"author": {
-		"name": "$user",
-		"email": "$email@xxx.com"
+		"name": "taoqf",
+		"email": "tao_qiufeng@126.com"
 	},
 	"maintainers": [
 		{
@@ -35,14 +39,55 @@
 		}
 	],
 	"license": "MIT",
-	"dependencies": {},
+	"dependencies": {
+		"cookie-parser": "1.4.4",
+		"errorhandler": "1.5.1",
+		"express": "4.17.1",
+		"express-form-data": "2.0.11",
+		"inline-source": "7.2.0",
+		"jsreport-chrome-pdf": "1.7.1",
+		"jsreport-core": "2.7.2",
+		"jsreport-html-embedded-in-docx": "2.2.0",
+		"jsreport-html-to-xlsx": "2.5.0",
+		"jsreport-xlsx": "2.3.0",
+		"jszip": "3.2.2",
+		"minio": "7.0.14",
+		"node-fetch": "2.6.0",
+		"pdf2image": "1.2.3",
+		"serve-favicon": "2.5.0",
+		"uuid": "7.0.1"
+	},
+	"peerDependencies": {
+		"@mmstudio/config": "*",
+		"@mmstudio/invoke": "*",
+		"log4js": "*"
+	},
 	"devDependencies": {
+		"@mmstudio/config": "latest",
+		"@mmstudio/invoke": "latest",
+		"@types/cookie-parser": "latest",
+		"@types/errorhandler": "latest",
+		"@types/express": "latest",
+		"@types/express-form-data": "latest",
+		"@types/jsreport-chrome-pdf": "latest",
+		"@types/jsreport-core": "latest",
+		"@types/jsreport-html-embedded-in-docx": "latest",
+		"@types/jsreport-html-to-xlsx": "latest",
+		"@types/jsreport-xlsx": "latest",
+		"@types/jszip": "latest",
+		"@types/minio": "latest",
+		"@types/node": "latest",
+		"@types/node-fetch": "latest",
+		"@types/pdf2image": "latest",
+		"@types/serve-favicon": "latest",
+		"@types/uuid": "latest",
 		"@typescript-eslint/eslint-plugin": "latest",
 		"@typescript-eslint/parser": "latest",
 		"ava": "latest",
 		"eslint": "latest",
 		"eslint-config-prettier": "latest",
 		"eslint-plugin-import": "latest",
+		"log4js": "latest",
 		"typescript": "next"
 	}
 }

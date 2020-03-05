@@ -2,5 +2,7 @@ node_modules/
 tests/
 src/
 tsconfig.json
+mm.json
+log4js.json
 *.sh
 *.log

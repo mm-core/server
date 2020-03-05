@@ -1,0 +1,64 @@
+{
+	"port": 8889,
+	"timeout": 500000,
+	"wx1": {
+		"getopenid": true,
+		"getuserinfo": false,
+		"token": "mmstudio",
+		"appid": "wx7d84eff0fb9683e4",
+		"appsecret": "63d1f587ee735140cbe653822c3f5823"
+	},
+	"acma": 150000,
+	"secure1": {
+		"redirect": "",
+		"ignore": [
+			"/home.html",
+			"http://thirdpart.com"
+		]
+	},
+	"favicon": "./favicon.ico",
+	"max_file_size": 53687091200,
+	"filters": [
+		{
+			"url": "/xxx",
+			"method": "get",
+			"service": "s001",
+			"data": {
+				"modelid": "s001"
+			}
+		}
+	],
+	"routers": [
+		{
+			"url": "/xxx",
+			"method": "post",
+			"service": "s001",
+			"data": {
+				"modelid": "s001"
+			}
+		}
+	],
+	"minio": {
+		"endPoint": "127.0.0.1",
+		"port": 9000,
+		"accessKey": "mmstudio",
+		"secretKey": "Mmstudio111111",
+		"useSSL": false,
+		"region": "cn-north-1",
+		"partSize": 5242880
+	},
+	"redis": {
+		"url": "redis://127.0.0.1:6379",
+		"expiration": 20000
+	},
+	"dbs": {
+		"sys": {
+			"type": "postgres",
+			"source": "postgres://mmstudio:Mmstudio111111@127.0.0.1:5432/feidao"
+		},
+		"prj001": {
+			"type": "mariadb",
+			"source": "mysql://mmstudio:Mmstudio111111@127.0.0.1:3306/feidao?connectionLimit=5"
+		}
+	}
+}
