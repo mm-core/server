@@ -4,5 +4,11 @@ src/
 tsconfig.json
 mm.json
 log4js.json
+.eslintignore  
+.eslintrc.json  
+.gitignore  
+.npmignore  
+.npmrc  
+.yarnrc
 *.sh
 *.log
