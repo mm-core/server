@@ -5,9 +5,11 @@
 	"scripts": {
 		"test": "tsc && ava ./tests/*.js",
 		"watch": "tsc -w",
-		"lint": "eslint ./src/*.ts ./src/**/*.ts",
+		"clean": "del-cli ./dist/",
+		"lint": "eslint ./src/**/*.ts",
 		"compile": "tsc",
 		"build": "npm run lint && npm run compile",
+		"up": "git merge master",
 		"start": "node ./dist/index.js"
 	},
 	"bin": {
@@ -84,6 +86,7 @@
 		"@typescript-eslint/eslint-plugin": "latest",
 		"@typescript-eslint/parser": "latest",
 		"ava": "latest",
+		"del-cli": "latest",
 		"eslint": "latest",
 		"eslint-config-prettier": "latest",
 		"eslint-plugin-import": "latest",
