@@ -8,7 +8,7 @@
 		"clean": "del-cli ./dist/",
 		"lint": "eslint ./src/**/*.ts",
 		"compile": "tsc",
-		"build": "npm run lint && npm run compile",
+		"build": "npm run clean && npm run lint && npm run compile",
 		"up": "git pull git@gitee.com:mmstudio/base.git cjs",
 		"start": "node ./dist/index.js"
 	},
@@ -20,6 +20,8 @@
 		"url": "https://gitee.com/mmstudio/base"
 	},
 	"main": "dist/index.js",
+	"module": "dist/index.js",
+	"types": "dist/index.d.ts",
 	"keywords": [
 		"mm",
 		"mmstudio",
