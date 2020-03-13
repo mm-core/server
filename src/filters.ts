@@ -39,7 +39,7 @@ export default function project() {
 				logger.info(`Request:${msg},actionid=${actionid}`);
 				const ret = await send_msg(r.service, data, actionid);
 				set_response(res, ret, msg, actionid, tm);
-				if (!ret.data) {
+				if (!ret.data && !ret.redirect) {
 					next();
 				}
 			} catch (e) {
