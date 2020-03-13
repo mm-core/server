@@ -35,15 +35,15 @@ export default function xlsx(router: Router) {
 		const actionid = headers.actionid as string;
 		const tm = new Date().getTime();
 		const url = req.url;
+		const body = req.body;
 		logger.info(`Request:${url},actionid=${actionid}`);
 		try {
 			const page_name = decodeURIComponent(/.*\/(.*?)\.xlsx/.exec(url)![1]);
 			const msg = {
-				cookie: req.cookies as { [key: string]: string },
-				headers: req.headers,
 				params: req.params,
 				query: req.query,
-				url
+				url,
+				...body
 			};
 			const ret = await page(page_name, url, msg, actionid);
 			logger.info(`Response:${page_name},actionid=${actionid}, and ${new Date().getTime() - tm}ms cost.`);

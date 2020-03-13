@@ -7,7 +7,7 @@ const logger = getLogger();
 
 export default function proxy_msg(router: Router) {
 	router.post('/sendmessage/:service', async (req, res) => {
-		const msg = req.body;
+		const body = req.body;
 		const headers = req.headers;
 		const actionid = headers.actionid as string;
 		const tm = new Date().getTime();
@@ -18,18 +18,14 @@ export default function proxy_msg(router: Router) {
 		};
 		const m = JSON.stringify(req.body);
 		logger.info(`Request:${m},actionid=${actionid}`);
-		const cookie = req.cookies;
 		const params = req.params;
 		const query = req.query;
 		try {
 			const data = {
-				cookie,
-				// data,
-				// headers,
 				params,
 				query,
 				urls,
-				...msg
+				...body
 			};
 			const ret = await send_msg(params.service, data, actionid);
 			set_response(res, ret, m, actionid, tm);

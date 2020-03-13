@@ -50,15 +50,15 @@ export default function pdf(router: Router) {
 		const actionid = headers.actionid as string;
 		const tm = new Date().getTime();
 		const url = req.url;
+		const body = req.body;
 		logger.info(`Request:${url},actionid=${actionid}`);
 		try {
 			const page_name = decodeURIComponent(/.*\/(.*?)\.pdf/.exec(url)![1]);
 			const msg = {
-				cookie: req.cookies,
-				headers: req.headers,
 				params: req.params,
 				query: req.query,
-				url
+				url,
+				...body
 			};
 			const ret = await page(page_name, url, msg, actionid);
 			logger.debug(`Response:${page_name},actionid=${actionid}, and ${new Date().getTime() - tm}ms cost.`);
