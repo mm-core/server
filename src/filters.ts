@@ -24,12 +24,10 @@ export default function project() {
 			const tm = new Date().getTime();
 			const body = req.body;
 			logger.debug('message body:', body);
-			const cookie = req.cookies;
 			const params = req.params;
 			const query = req.query;
 			try {
 				const data = {
-					cookie,
 					// headers,
 					params,
 					query,
