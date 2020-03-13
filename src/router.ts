@@ -3,7 +3,6 @@ import { Router } from 'express';
 import cross_domain from './routers/cross-domain';
 import docx from './routers/docx';
 import file from './routers/file';
-import getip from './routers/getip';
 import html from './routers/html';
 import pdf from './routers/pdf';
 import project from './routers/project';
@@ -43,9 +42,6 @@ export default function create_router() {
 
 	// 9 excel表格
 	xlsx(router);
-
-	// 10 获取本机ip
-	getip(router);
 
 	return router;
 }
