@@ -5,7 +5,7 @@ import page from './_page';
 const logger = getLogger();
 
 export default function html(router: Router) {
-	router.get('/*.html', async (req, res) => {
+	router.get('/*.html?', async (req, res) => {
 		const headers = req.headers;
 		const actionid = headers.actionid as string;
 		const tm = new Date().getTime();
@@ -13,7 +13,7 @@ export default function html(router: Router) {
 		const body = req.body;
 		logger.info(`Request:${url},actionid=${actionid}`);
 		try {
-			const page_name = decodeURIComponent(/.*\/(.*?)\.html/.exec(url)![1]);
+			const page_name = decodeURIComponent(/.*\/(.*?)\.html?/.exec(url)![1]);
 			const msg = {
 				params: req.params,
 				query: req.query,
@@ -28,6 +28,7 @@ export default function html(router: Router) {
 			}
 			res.send(ret);
 		} catch (e) {
+			console.trace(e);
 			logger.trace(e);
 			const err_msg = (e as Error).message || e.toString();
 			logger.error(`Failling render page:${url}. ${err_msg}, and ${new Date().getTime() - tm}ms cost. actionid=${actionid}.`);

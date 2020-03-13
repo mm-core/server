@@ -5,6 +5,7 @@ src/
 tsconfig.json
 mm.json
 log4js.json
+favicon.ico
 .eslintignore 
 .eslintrc.json
 .gitignore
