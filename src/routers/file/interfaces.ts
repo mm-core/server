@@ -7,7 +7,6 @@ export interface IFileDoc {
 	contentType: string;
 	name: string;
 	md5: string;
-	metadata: IMetaData;
 }
 
 export interface IOfficeFile {

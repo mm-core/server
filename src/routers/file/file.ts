@@ -74,7 +74,6 @@ async function up(files: IFile[]) {
 				contentType: file.type,
 				id,
 				md5,
-				metadata: meta,
 				name: file.name
 			};
 			return doc;
@@ -345,7 +344,6 @@ export async function reupload(req: Request, id: string) {
 			contentType: file.type,
 			id,
 			md5,
-			metadata: meta,
 			name: file.name
 		};
 		return doc;
