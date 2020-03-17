@@ -42,7 +42,7 @@
 		"endPoint": "127.0.0.1",
 		"port": 9000,
 		"accessKey": "mmstudio",
-		"secretKey": "Mmstudio111111",
+		"secretKey": "Mmstudio123",
 		"useSSL": false,
 		"region": "cn-north-1",
 		"partSize": 5242880
