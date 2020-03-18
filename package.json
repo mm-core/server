@@ -3,7 +3,7 @@
 	"version": "1.0.202003171044",
 	"description": "web server",
 	"scripts": {
-		"test": "tsc && ava ./tests/*.js",
+		"test": "npm start",
 		"watch": "tsc -w",
 		"clean": "del-cli ./dist/",
 		"lint": "eslint ./src/**/*.ts",
@@ -44,7 +44,8 @@
 	],
 	"license": "MIT",
 	"dependencies": {
-		"cookie-parser": "1.4.4",
+		"@mmstudio/invoke": "1.1.202003181231",
+		"cookie-parser": "1.4.5",
 		"errorhandler": "1.5.1",
 		"express": "4.17.1",
 		"express-form-data": "2.0.11",
@@ -52,23 +53,21 @@
 		"jsreport-chrome-pdf": "1.7.1",
 		"jsreport-core": "2.7.2",
 		"jsreport-html-embedded-in-docx": "2.2.0",
-		"jsreport-html-to-xlsx": "2.5.0",
+		"jsreport-html-to-xlsx": "2.6.0",
 		"jsreport-xlsx": "2.3.0",
 		"jszip": "3.2.2",
-		"minio": "7.0.14",
+		"minio": "7.0.15",
 		"node-fetch": "2.6.0",
 		"pdf2image": "1.2.3",
 		"serve-favicon": "2.5.0",
-		"uuid": "7.0.1"
+		"uuid": "7.0.2"
 	},
 	"peerDependencies": {
 		"@mmstudio/config": "*",
-		"@mmstudio/invoke": "*",
 		"log4js": "*"
 	},
 	"devDependencies": {
 		"@mmstudio/config": "latest",
-		"@mmstudio/invoke": "latest",
 		"@types/cookie-parser": "latest",
 		"@types/errorhandler": "latest",
 		"@types/express": "latest",

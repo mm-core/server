@@ -1,4 +1,3 @@
-import config from '@mmstudio/config';
 import { getLogger } from 'log4js';
 import invoke from '@mmstudio/invoke';
 
@@ -17,7 +16,7 @@ export interface IWebResult {
 }
 
 export default async function send_msg(service: string, msg: unknown, actionid: string) {
-	const data = await invoke<IWebResult>(config.cwd, service, msg, actionid);
+	const data = await invoke<IWebResult>(service, msg, actionid);
 	if (Buffer.isBuffer(data.data)) {
 		logger.debug(`res=Blob Data.actionid=${actionid}`);
 		if (!data.content_type) {
