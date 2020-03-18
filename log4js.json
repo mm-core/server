@@ -8,7 +8,7 @@
 		},
 		"dateFile": {
 			"type": "dateFile",
-			"filename": "./logs/feidao.log",
+			"filename": "./logs/mm.log",
 			"maxLogSize": 10240000,
 			"backups": 30
 		}
