@@ -1,6 +1,6 @@
 {
 	"name": "@mmstudio/server",
-	"version": "1.0.202004170947",
+	"version": "1.0.202004170949",
 	"description": "web server",
 	"scripts": {
 		"test": "npm start",
