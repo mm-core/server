@@ -16,7 +16,6 @@
 			"http://thirdpart.com"
 		]
 	},
-	"favicon": "./favicon.ico",
 	"max_file_size": 53687091200,
 	"filters": [
 		{
