@@ -45,7 +45,7 @@
 	],
 	"license": "MIT",
 	"dependencies": {
-		"@mmstudio/invoke": "1.1.202003191022",
+		"@mmstudio/invoke": "1.1.202004170948",
 		"cookie-parser": "1.4.5",
 		"errorhandler": "1.5.1",
 		"express": "4.17.1",
