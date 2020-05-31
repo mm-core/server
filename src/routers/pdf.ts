@@ -1,10 +1,10 @@
 import config from '@mmstudio/config';
 import { Router } from 'express';
 import { inlineSource as inline } from 'inline-source';
-import JsreportChromePdf from 'jsreport-chrome-pdf';
+import JsreportPhantomPdf from 'jsreport-phantom-pdf';
 import JsReport from 'jsreport-core';
 import { getLogger } from 'log4js';
-import page from './_page';
+import page, { ICommonParams } from './_page';
 
 const logger = getLogger();
 
@@ -19,10 +19,8 @@ interface IQuery {
 
 async function html2pdf(html: string, orientation: Orientation, width: string, height: string) {
 	const jsreport = JsReport();
-	jsreport.use(JsreportChromePdf({
-		launchOptions: {
-			args: ['--no-sandbox', '--disable-setuid-sandbox']
-		}
+	jsreport.use(JsreportPhantomPdf({
+		allowLocalFilesAccess: true
 	}));
 	const content = await inline(html, {
 		compress: true,
@@ -31,14 +29,14 @@ async function html2pdf(html: string, orientation: Orientation, width: string, h
 	await jsreport.init();
 	const resp = await jsreport.render({
 		template: {
-			chrome: {
+			phantom: {
 				height,
-				landscape: orientation === 'landscape',
-				width
+				width,
+				orientation
 			},
 			content,
 			engine: 'none',
-			recipe: 'chrome-pdf'
+			recipe: 'phantom-pdf'
 		}
 	});
 	return resp.content;
@@ -50,7 +48,7 @@ export default function pdf(router: Router) {
 		const actionid = headers.actionid as string;
 		const tm = new Date().getTime();
 		const url = req.url;
-		const body = req.body;
+		const body = req.body as Record<string, unknown>;
 		logger.info(`Request:${url},actionid=${actionid}`);
 		try {
 			const page_name = decodeURIComponent(/.*\/(.*?)\.pdf/.exec(url)![1]);
@@ -59,7 +57,7 @@ export default function pdf(router: Router) {
 				query: req.query,
 				url,
 				...body
-			};
+			} as ICommonParams;
 			const ret = await page(page_name, url, msg, actionid);
 			logger.debug(`Response:${page_name},actionid=${actionid}, and ${new Date().getTime() - tm}ms cost.`);
 			if (!ret) {
@@ -68,7 +66,7 @@ export default function pdf(router: Router) {
 			}
 			const tm1 = new Date().getTime();
 			logger.debug(`Start converting to pdf:${page_name},actionid=${actionid}`);
-			const { attachment, height, orientation, width } = req.query as IQuery;
+			const { attachment, height, orientation, width } = req.query as unknown as IQuery;
 			const data = await html2pdf(ret, orientation, width, height);
 			logger.debug(`Finish converting to pdf:${page_name},actionid=${actionid}, and ${new Date().getTime() - tm1}ms cost.`);
 			res.contentType('application/pdf');
@@ -76,9 +74,10 @@ export default function pdf(router: Router) {
 				res.attachment(attachment);
 			}
 			res.send(data);
-		} catch (e) {
+		} catch (err) {
+			const e = err as Error;
 			logger.trace(e);
-			const err_msg = (e as Error).message || e.toString();
+			const err_msg = e.message || e.toString();
 			logger.error(`Failling render pdf page:${url}. ${err_msg}, and ${new Date().getTime() - tm}ms cost. actionid=${actionid}.`);
 			res.contentType('application/json');
 			res.status(500).end(err_msg);

@@ -16,6 +16,7 @@ interface IQuery {
 
 export default function wx(router: Router) {
 	interface IWxuserinfo {
+		code?: string;
 		openid: string;		// 用户的唯一标识
 		nickname?: string;	// 用户昵称
 		sex?: '1' | '2';		// 用户的性别，值为1时是男性，值为2时是女性，值为0时是未知
@@ -34,7 +35,7 @@ export default function wx(router: Router) {
 	}
 	const { wx: { appid, appsecret, token, getopenid, getuserinfo } } = config;
 	router.get('/wx-validate', (req, res) => {
-		const { signature, timestamp, nonce, echostr } = req.query as IQuery;
+		const { signature, timestamp, nonce, echostr } = req.query as unknown as IQuery;
 		logger.info(`wx params: signature=${signature},timestamp=${timestamp},nonce=${nonce}, echostr=${echostr}`);
 		const content = [timestamp, nonce, token].sort().join('');
 		const data = createHash('sha1').update(content).digest('hex');
@@ -54,19 +55,19 @@ export default function wx(router: Router) {
 				if (req.body) {
 					(req.body as IBody).wxuserinfo = wxuserinfo;
 				} else if (req.query) {
-					(req.query as IBody).wxuserinfo = wxuserinfo;
+					(req.query as unknown as IBody).wxuserinfo = wxuserinfo;
 				}
 			}
 			next();
 		});
 		router.get('/*.html', async (req, res, next) => {
 			logger.info('requet headers:', JSON.stringify(req.headers));
-			const query = req.query as IBody;
-			if (!query.wxuserinfo) {
+			const query = req.query as unknown as IBody;
+			if (query.wxuserinfo) {
 				const { code } = query.wxuserinfo;
 				if (!code) {
 					const scope = getuserinfo ? 'snsapi_userinfo' : 'snsapi_base';
-					const url = `${req.protocol}://${req.headers.host}${req.url}`;
+					const url = `${req.protocol}://${req.headers.host!}${req.url}`;
 					const redirect = `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${appid}&redirect_uri=${encodeURIComponent(url)}&response_type=code&scope=${scope}#wechat_redirect`;
 					logger.info(`Request:${url}, redirect to weixin to get code`);
 					res.redirect(302, redirect);

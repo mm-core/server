@@ -7,7 +7,7 @@ import config from '@mmstudio/config';
 const { access } = promises;
 const logger = getLogger();
 
-interface ICommonParams {
+export interface ICommonParams {
 	cookie: {
 		[name: string]: string;
 	};

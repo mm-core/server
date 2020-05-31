@@ -21,7 +21,7 @@ export default function project(router: Router) {
 			};
 			logger.info(`URL:${req.url}, actionid=${actionid}`);
 			const tm = new Date().getTime();
-			const body = req.body;
+			const body = req.body as Record<string, unknown>;
 			logger.debug('message body:', body);
 			const params = req.params;
 			const query = req.query;
@@ -37,8 +37,9 @@ export default function project(router: Router) {
 				logger.info(`Request:${msg},actionid=${actionid}`);
 				const ret = await send_msg(r.service, data, actionid);
 				set_response(res, ret, msg, actionid, tm);
-			} catch (e) {
-				const err_msg = (e as Error).message || e.toString();
+			} catch (err) {
+				const e = err as Error;
+				const err_msg = e.message || e.toString();
 				logger.error(`Failling proxy message. ${err_msg}, and ${new Date().getTime() - tm}ms cost. actionid=${actionid}.`);
 				res.contentType('application/json');
 				res.status(500).end(err_msg);

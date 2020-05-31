@@ -5,7 +5,7 @@ import JsReport from 'jsreport-core';
 import JsreportHtml2Xlsx from 'jsreport-html-to-xlsx';
 import JsreportXlsx from 'jsreport-xlsx';
 import { getLogger } from 'log4js';
-import page from './_page';
+import page, { ICommonParams } from './_page';
 
 const logger = getLogger();
 
@@ -35,7 +35,7 @@ export default function xlsx(router: Router) {
 		const actionid = headers.actionid as string;
 		const tm = new Date().getTime();
 		const url = req.url;
-		const body = req.body;
+		const body = req.body as Record<string, unknown>;
 		logger.info(`Request:${url},actionid=${actionid}`);
 		try {
 			const page_name = decodeURIComponent(/.*\/(.*?)\.xlsx/.exec(url)![1]);
@@ -44,7 +44,7 @@ export default function xlsx(router: Router) {
 				query: req.query,
 				url,
 				...body
-			};
+			} as ICommonParams;
 			const ret = await page(page_name, url, msg, actionid);
 			logger.info(`Response:${page_name},actionid=${actionid}, and ${new Date().getTime() - tm}ms cost.`);
 			if (!ret) {
@@ -61,9 +61,10 @@ export default function xlsx(router: Router) {
 				res.attachment(attachment);
 			}
 			res.send(data);
-		} catch (e) {
+		} catch (err) {
+			const e = err as Error;
 			logger.trace(e);
-			const err_msg = (e as Error).message || e.toString();
+			const err_msg = e.message || e.toString();
 			logger.error(`Failling render xlsx page:${url}. ${err_msg}, and ${new Date().getTime() - tm}ms cost. actionid=${actionid}.`);
 			res.contentType('application/json');
 			res.status(500).end(err_msg);

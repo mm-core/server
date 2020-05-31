@@ -124,7 +124,7 @@ const ms_type = /^application\/.*(ms|office).*/i;
  */
 export async function upload_office(req: Request, res: Response) {
 	const office_files = getFiles(req);
-	const toimg = (req.query as { toimg: boolean }).toimg !== undefined;
+	const toimg = (req.query as unknown as { toimg: boolean }).toimg !== undefined;
 	// sudo apt-get install unoconv libreoffice-dev imagemagick
 	const files = [] as IOfficeFile[];
 	// convert to pdf
