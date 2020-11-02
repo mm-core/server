@@ -1,6 +1,6 @@
 {
 	"name": "@mmstudio/server",
-	"version": "1.0.202005312012",
+	"version": "1.0.202011021106",
 	"description": "web server",
 	"scripts": {
 		"test": "npm start",
@@ -13,7 +13,7 @@
 		"start": "tsc && node ./dist/index.js"
 	},
 	"bin": {
-		"mm-server": "./dist/index.js"
+		"mm-server": "dist/index.js"
 	},
 	"repository": {
 		"type": "https+git",
