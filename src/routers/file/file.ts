@@ -28,11 +28,25 @@ const NAME_SPACE = 'file';
  */
 function getFiles(req: Request) {
 	const files = [] as IFile[];
-	const body = req.body as object;
+	interface IFileTemp extends IFile {
+		fieldName: string;
+		size: number;
+	}
+	function isfile(file: IFileTemp | Record<string, IFileTemp>): file is IFileTemp {
+		return Boolean(file.path && file.name && file.fieldName && file.type && file.size > 0);
+	}
+	const body = req.body as Record<string, IFileTemp | Record<string, IFileTemp>>;
 	for (const name in body) {
-		const file = body[name] as IFile & { fieldName: string; size: number };
-		if (file.path && file.name && file.fieldName && file.type && file.size > 0) {
+		const file = body[name];
+		if (isfile(file)) {
 			files.push(file);
+		} else if (typeof file === 'object') {
+			for (const name in file) {
+				const f = file[name];
+				if (isfile(f)) {
+					files.push(f);
+				}
+			}
 		}
 	}
 	return files;

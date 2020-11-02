@@ -67,16 +67,16 @@ export default function start() {
 		if (!req.body) {
 			req.body = {};
 		}
-		const headers = req.headers;
-		const actionid = (headers.actionid as string) || uuid();
+		const headers = req.headers as Record<string, string>;
+		const actionid = headers.actionid || uuid();
 		headers.actionid = actionid;
 		res.setHeader('actionid', actionid);
 		const ip = headers['x-real-ip'] || headers['x-forwarded-for'] || // 判断是否有反向代理 IP
 			req.connection.remoteAddress || // 判断 connection 的远程 IP
 			req.socket.remoteAddress; // 判断后端的 socket 的 IP
-		const body = req.body;
+		const body = req.body as { realip: string | undefined; cookies: unknown; headers: Record<string, string>; };
 		body.realip = ip;
-		body.cookies = req.cookies;
+		body.cookies = req.cookies as Record<string, string>;
 		body.headers = headers;
 		next();
 	});
