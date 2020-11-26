@@ -1,5 +1,6 @@
 export interface IMetaData {
 	originialfilename: string;
+	'content-type': string;
 }
 
 export interface IFileDoc {

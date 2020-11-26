@@ -75,7 +75,7 @@ async function up(files: IFile[]) {
 		const meta: IMetaData = {
 			// chunkSizeBytes:'number',
 			// 文件的附加数据
-			// contentType: file.type,
+			'content-type': file.type,
 			originialfilename: encodeURIComponent(file.name)
 			// aliases: ['string']
 		};
@@ -163,7 +163,7 @@ export async function upload_office(req: Request, res: Response) {
 			}
 		} else if (/^application\/pdf$/i.test(file.type) && toimg) {
 			// just convert pdf to images
-			const images = await convertPDF(file.path, { outputFormat: `${tmpdir}${sep}%s-%d` });
+			const images = await convertPDF(file.path, { outputFormat: `${output}${sep}%s-%d` });
 			f.images = images.map((img) => {
 				return {
 					name: img.name,
@@ -277,47 +277,34 @@ export async function read(res: Response, r: string, id: string) {
 			name,
 			stream: pack.zipfile.generateNodeStream()
 		};
-
 	}
 	const stat = await client.statObject(NAME_SPACE, id);
 	const meta = stat.metaData as IMetaData;
 	const stream = await (() => {
 		if (r) {
 			logger.info(`method: getfile,id:${id} with range:${r}`);
-			const ranges = range_parser(Infinity, r, { combine: true });
-			logger.debug(`parsed range:${JSON.stringify(ranges)}}`);
+			const ranges = range_parser(stat.size, r, { combine: true });
+			logger.debug(`parsed range:${JSON.stringify(ranges)}`);
 			if (ranges === -1) {
+				res.set('Content-Range', `*/${stat.size}`);
+				res.status(416);
 				throw new Error('Incorrect request!');
 			} else if (ranges === -2) {
 				throw new Error('Incorrect request!');
-			} else if (ranges[0].end === Infinity) {
-				logger.info(`method: getfile,id:${id} without range.`);
-				return client.getObject(NAME_SPACE, id);
 			} else {
 				const range = ranges[0];
-				if (!range || range.end === Infinity) {
-					logger.info(`method: getfile,id:${id} without range[0-].`);
-					return client.getObject(NAME_SPACE, id);
-				}
-				const start = ranges[0].start;
-				const end = ranges[0].end;	// for lastest byte
-				logger.debug(`${start}-${end}/${stat.size}`);
-				if (end === Infinity) {
-					// 0-
-					res.setHeader('Content-Range', `bytes ${start}-/${stat.size}`);
-					return client.getPartialObject(NAME_SPACE, id, start);
-				}
+				const start = range.start;
+				const end = range.end;	// for lastest byte
+				res.status(206);
 				res.setHeader('Content-Range', `bytes ${start}-${end}/${stat.size}`);
-				return client.getPartialObject(NAME_SPACE, id, end + 1);
-
-
+				res.setHeader('Content-Length', end + 1 - start);
+				return client.getPartialObject(NAME_SPACE, id, start, end - start + 1);
 			}
 		} else {
 			logger.info(`method: getfile,id:${id} without range.`);
 			return client.getObject(NAME_SPACE, id);
 		}
 	})();
-
 	return {
 		contentType: meta['content-type'],
 		md5: stat.etag,
@@ -345,7 +332,7 @@ export async function reupload(req: Request, id: string) {
 	const meta: IMetaData = {
 		// chunkSizeBytes:'number',
 		// 文件的附加数据
-		// contentType: file.type,
+		'content-type': file.type,
 		originialfilename: encodeURIComponent(file.name)
 		// aliases: ['string']
 	};
@@ -364,5 +351,4 @@ export async function reupload(req: Request, id: string) {
 	}
 	logger.error('Could not read file from file system:');
 	throw new Error('Could not read file.');
-
 }

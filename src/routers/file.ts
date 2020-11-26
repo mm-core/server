@@ -56,6 +56,10 @@ function router_upload_office(router: Router) {
  * 文件下载，预览
  */
 function router_download(router: Router) {
+	router.use('/:fsweb?/getfile', (_req, res, next) => {
+		res.setHeader('Accept-Ranges', 'bytes');
+		next();
+	});
 	router.get('/:fsweb?/getfile', async (req, res) => {
 		logger.debug('**********************************************');
 		logger.debug('url:', req.url);
@@ -87,19 +91,12 @@ function router_download(router: Router) {
 			res.setHeader('Content-Type', result.contentType);
 			logger.debug(`getfile success,filename:${filename}`);
 			// 增加Etag判断文件是否有变动
-			const etag = result.md5 && `W/"${result.md5}"`;
-			if (etag) {
-				res.setHeader('Etag', etag);
-			}
+			const etag = `W/"${result.md5}"`;
+			res.setHeader('Etag', etag);
 			if (none_match && (none_match === etag)) {
 				// 文件没有变动直接返回304使用本地缓存
 				res.status(304).end();
 			} else {
-				// 对微信小程序做特殊处理
-				// todo need test
-				if (!(req.header('user-agent')!).includes('MicroMessenger Client')) {
-					res.setHeader('Accept-Ranges', 'bytes');
-				}
 				result.stream.pipe(res);
 			}
 		} catch (e) {
