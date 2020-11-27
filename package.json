@@ -1,6 +1,6 @@
 {
 	"name": "@mmstudio/server",
-	"version": "1.0.202011262026",
+	"version": "1.0.202011271712",
 	"description": "web server",
 	"scripts": {
 		"dev": "tsc -w",
