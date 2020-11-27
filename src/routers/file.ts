@@ -1,15 +1,35 @@
 import { Request, Router } from 'express';
 import { getLogger } from 'log4js';
-import { del, read, reupload, upload, upload_office } from './file/file';
+import { del, read, reupload, upload, upload_office, upload_video } from './file/file';
 
 const logger = getLogger();
 
 export default function file(router: Router) {
 	router_upload(router);
 	router_upload_office(router);
+	router_upload_video(router);
 	router_download(router);
 	router_del(router);
 	router_replace(router);
+}
+
+/**
+ * 将视频转换为mp4，需要本机安装 ffmpeg 以及对应的解码库
+ */
+function router_upload_video(router: Router) {
+	router.post('/:fsweb?/upload-mp4h264/', async (req, res) => {
+		logger.debug('method: upload-video');
+		try {
+			const result = await upload_video(req);
+			logger.debug('upload success result:', result);
+			res.status(200).json(result);
+		} catch (e) {
+			const er = e as Error;
+			const err = er.message || er.toString();
+			logger.error('upload fail!', err);
+			res.status(500).send(err);
+		}
+	});
 }
 
 /**
@@ -89,7 +109,7 @@ function router_download(router: Router) {
 				res.setHeader('Content-Disposition', `inline; filename=${filename}`);
 			}
 			res.setHeader('Content-Type', result.contentType);
-			logger.debug(`getfile success,filename:${filename}`);
+			logger.debug(`getfile success,filename:${filename}, ${result.contentType}`);
 			// 增加Etag判断文件是否有变动
 			const etag = `W/"${result.md5}"`;
 			res.setHeader('Etag', etag);

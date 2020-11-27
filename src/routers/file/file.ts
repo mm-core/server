@@ -1,4 +1,3 @@
-import { exec } from 'child_process';
 import { unlink } from 'fs';
 import { tmpdir } from 'os';
 import { join, parse, sep } from 'path';
@@ -10,7 +9,9 @@ import { Client } from 'minio';
 import { convertPDF } from 'pdf2image';
 import range_parser from 'range-parser';
 import { v4 as uuid } from 'uuid';
+import exec from './exec';
 import { IFile, IFileDoc, IMetaData, IOfficeFile } from './interfaces';
+import { converttomp4, get_stream_info, screenshot } from './vedio';
 
 const logger = getLogger();
 
@@ -21,21 +22,22 @@ const client = new Client(config.minio);
 const output = tmpdir();
 
 const NAME_SPACE = 'file';
+interface IFileTemp extends IFile {
+	fieldName: string;
+	size: number;
+}
 
 /**
  * 获取所有待上传的文件列表，包含压缩处理过的图片
  * @param req
  */
-function getFiles(req: Request) {
+function getFiles(req: Request<Record<string, unknown>, unknown, Record<string, IFileTemp | Record<string, IFileTemp>>>) {
 	const files = [] as IFile[];
-	interface IFileTemp extends IFile {
-		fieldName: string;
-		size: number;
-	}
 	function isfile(file: IFileTemp | Record<string, IFileTemp>): file is IFileTemp {
 		return Boolean(file.path && file.name && file.fieldName && file.type && file.size > 0);
 	}
-	const body = req.body as Record<string, IFileTemp | Record<string, IFileTemp>>;
+	const body = req.body;
+	// as Record<string, IFileTemp | Record<string, IFileTemp>>;
 	for (const name in body) {
 		const file = body[name];
 		if (isfile(file)) {
@@ -73,18 +75,17 @@ async function up(files: IFile[]) {
 	}
 	return Promise.all(files.map(async (file) => {
 		const meta: IMetaData = {
-			// chunkSizeBytes:'number',
-			// 文件的附加数据
+			...file.meta,
 			'content-type': file.type,
 			originialfilename: encodeURIComponent(file.name)
-			// aliases: ['string']
 		};
-		const id = uuid();
+		const id = file.id || uuid();
 		if (file.path) {
 			// 原文件，上传的时候有存储到文件系统中
 			// 压缩处理后的文件
 			const md5 = await client.fPutObject(NAME_SPACE, id, file.path, meta);
 			const doc: IFileDoc = {
+				meta,
 				contentType: file.type,
 				id,
 				md5,
@@ -94,47 +95,118 @@ async function up(files: IFile[]) {
 		}
 		logger.error('Could not read file from file system:');
 		throw new Error('Could not read file.');
-
 	}));
 }
 
+function replace_suffix(path: string, suffix: string) {
+	return `${path.replace(/(.*)\..*$/, '$1')}.${suffix}`;
+}
+
 /**
- * office file content-type
- *  doc	application/msword
- * .dot	application/msword
- * .docx	application/vnd.openxmlformats-officedocument.wordprocessingml.document
- * .dotx	application/vnd.openxmlformats-officedocument.wordprocessingml.template
- * .docm	application/vnd.ms-word.document.macroEnabled.12
- * .dotm	application/vnd.ms-word.template.macroEnabled.12
- * .xls	application/vnd.ms-excel
- * .xlt	application/vnd.ms-excel
- * .xla	application/vnd.ms-excel
- * .xlsx	application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
- * .xltx	application/vnd.openxmlformats-officedocument.spreadsheetml.template
- * .xlsm	application/vnd.ms-excel.sheet.macroEnabled.12
- * .xltm	application/vnd.ms-excel.template.macroEnabled.12
- * .xlam	application/vnd.ms-excel.addin.macroEnabled.12
- * .xlsb	application/vnd.ms-excel.sheet.binary.macroEnabled.12
- * .ppt	application/vnd.ms-powerpoint
- * .pot	application/vnd.ms-powerpoint
- * .pps	application/vnd.ms-powerpoint
- * .ppa	application/vnd.ms-powerpoint
- * .pptx	application/vnd.openxmlformats-officedocument.presentationml.presentation
- * .potx	application/vnd.openxmlformats-officedocument.presentationml.template
- * .ppsx	application/vnd.openxmlformats-officedocument.presentationml.slideshow
- * .ppam	application/vnd.ms-powerpoint.addin.macroEnabled.12
- * .pptm	application/vnd.ms-powerpoint.presentation.macroEnabled.12
- * .potm	application/vnd.ms-powerpoint.presentation.macroEnabled.12
- * .ppsm	application/vnd.ms-powerpoint.slideshow.macroEnabled.12
+ * 上传视频文件,并转换为mp4h264格式,同时截取一张视频封面
  */
+export async function upload_video(req: Request) {
+	const type = 'video/mp4';
+	const files = await Promise.all(getFiles(req).map(async (file) => {
+		let ret;
+		// screenshot and duration
+		const img = replace_suffix(file.path, 'jpg');
+		await screenshot(file.path, img, 5);
+		const [uploaded_image] = await up([{
+			name: replace_suffix(file.name, 'jpg'),
+			path: img,
+			type: 'image/jpeg'
+		}]);
+		const [video, audio] = await get_stream_info(file.path);
+		// !!! 如果上传的格式不是mp4格式，这里返回的值是原文件的多媒体信息
+		file.meta = { screenshot: uploaded_image.id, video, audio, duration: video.duration } as Partial<IMetaData> as IMetaData;
+		if (video.codec_name === 'h264') {
+			if (file.type !== type) {
+				file.type = type;
+			}
+			ret = (await up([file]))[0];
+		} else {
+			// do not wait convertion, just return file id, the video could not be download before convertion.
+			const path = file.path;
+			file.path = '';	// !!! 将这里置空，则该请求完毕后不删除该文件，等转换操作完成后再删
+			const mp4_path = replace_suffix(path, 'mp4');
+			const name = replace_suffix(file.name, 'mp4');
+			const id = uuid();
+			// eslint-disable-next-line @typescript-eslint/no-floating-promises
+			(async (file) => {
+				await converttomp4(path, mp4_path);
+				const [video, audio] = await get_stream_info(mp4_path);
+				const meta = { ...file.meta, video, audio, duration: video.duration } as IMetaData;
+				await up([{
+					meta,
+					id,
+					name,
+					path: mp4_path,
+					type
+				}]);
+				unlink(path, (e) => {
+					logger.error(e);
+				});
+				unlink(mp4_path, (e) => {
+					logger.error(e);
+				});
+				logger.info(`File is converted: id=${id}, name=${file.name}`);
+			})(file);
+			ret = {
+				id,
+				contentType: type,
+				meta: {
+					video,
+					audio
+				} as Partial<IMetaData>,
+				md5: '',
+				name
+			} as IFileDoc;
+		}
+		ret.meta.screenshot = uploaded_image.id;
+		return ret;
+	}));
+	logger.info('upload all!');
+	return files;
+}
 
-const ms_type = /^application\/.*(ms|office).*/i;
+function isofficefile(type: string) {
+	/**
+	 * office file content-type
+	 *  doc	application/msword
+	 * .dot	application/msword
+	 * .docx	application/vnd.openxmlformats-officedocument.wordprocessingml.document
+	 * .dotx	application/vnd.openxmlformats-officedocument.wordprocessingml.template
+	 * .docm	application/vnd.ms-word.document.macroEnabled.12
+	 * .dotm	application/vnd.ms-word.template.macroEnabled.12
+	 * .xls	application/vnd.ms-excel
+	 * .xlt	application/vnd.ms-excel
+	 * .xla	application/vnd.ms-excel
+	 * .xlsx	application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+	 * .xltx	application/vnd.openxmlformats-officedocument.spreadsheetml.template
+	 * .xlsm	application/vnd.ms-excel.sheet.macroEnabled.12
+	 * .xltm	application/vnd.ms-excel.template.macroEnabled.12
+	 * .xlam	application/vnd.ms-excel.addin.macroEnabled.12
+	 * .xlsb	application/vnd.ms-excel.sheet.binary.macroEnabled.12
+	 * .ppt	application/vnd.ms-powerpoint
+	 * .pot	application/vnd.ms-powerpoint
+	 * .pps	application/vnd.ms-powerpoint
+	 * .ppa	application/vnd.ms-powerpoint
+	 * .pptx	application/vnd.openxmlformats-officedocument.presentationml.presentation
+	 * .potx	application/vnd.openxmlformats-officedocument.presentationml.template
+	 * .ppsx	application/vnd.openxmlformats-officedocument.presentationml.slideshow
+	 * .ppam	application/vnd.ms-powerpoint.addin.macroEnabled.12
+	 * .pptm	application/vnd.ms-powerpoint.presentation.macroEnabled.12
+	 * .potm	application/vnd.ms-powerpoint.presentation.macroEnabled.12
+	 * .ppsm	application/vnd.ms-powerpoint.slideshow.macroEnabled.12
+	 */
+
+	return /^application\/.*(ms|office).*/i.test(type);
+}
 
 /**
- * 上传office文件到mongodb数据库中,并转换为pdf和图片
+ * 上传office文件到,并转换为pdf和图片
  * @param req
- * @param db_info
- * @param standard
  */
 export async function upload_office(req: Request, res: Response) {
 	const office_files = getFiles(req);
@@ -146,7 +218,7 @@ export async function upload_office(req: Request, res: Response) {
 		const f: IOfficeFile = {
 			origin: file
 		};
-		if (ms_type.test(file.type)) {
+		if (isofficefile(file.type)) {
 			// convert office file to pdf first
 			const pdf = await to_pdf(res, file.path, file.name);
 			f.pdf = pdf;
@@ -202,27 +274,19 @@ export async function upload_office(req: Request, res: Response) {
 
 }
 
-function to_pdf(res: Response, file_path: string, name: string) {
-	return new Promise<IFile>((resolve, reject) => {
-		const nm = `${parse(name).name}.pdf`;
-		const full_path = `${parse(file_path).name}.pdf`;
-		const pdf_file = join(output, full_path);
-		exec(`libreoffice --headless --convert-to pdf --outdir ${output} '${file_path}'`, (err) => {
-			if (err) {
-				reject(err);
-
-			} else {
-				// _result: convert /home/taoqf/feidao/temp/test/test.docx -> /tmp/test.pdf using filter : writer_pdf_Export
-				const file: IFile = {
-					name: nm,
-					path: pdf_file,
-					type: 'application/pdf'
-				};
-				auto_clean(res, [file]);
-				resolve(file);
-			}
-		});
-	});
+async function to_pdf(res: Response, file_path: string, name: string) {
+	const nm = `${parse(name).name}.pdf`;
+	const full_path = `${parse(file_path).name}.pdf`;
+	const pdf_file = join(output, full_path);
+	await exec(`libreoffice --headless --convert-to pdf --outdir ${output} '${file_path}'`);
+	// _result: convert /home/taoqf/feidao/temp/test/test.docx -> /tmp/test.pdf using filter : writer_pdf_Export
+	const file: IFile = {
+		name: nm,
+		path: pdf_file,
+		type: 'application/pdf'
+	};
+	auto_clean(res, [file]);
+	return file;
 }
 
 function auto_clean(res: Response, files: IFile[]) {
@@ -342,6 +406,7 @@ export async function reupload(req: Request, id: string) {
 		const md5 = await client.fPutObject(NAME_SPACE, id, file.path, meta);
 		logger.info('reuploaded!');
 		const doc: IFileDoc = {
+			meta,
 			contentType: file.type,
 			id,
 			md5,
