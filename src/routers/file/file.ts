@@ -21,7 +21,7 @@ const client = new Client(config.minio);
 
 const output = tmpdir();
 
-const NAME_SPACE = 'file';
+const NAME_SPACE = 'mmstudio';
 interface IFileTemp extends IFile {
 	fieldName: string;
 	size: number;
